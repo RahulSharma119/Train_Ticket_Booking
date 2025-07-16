@@ -1,131 +1,141 @@
 version: '3.9'
 
-x-environment:
-  &default-eureka-env
-  EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka
 
 services:
 
   discoveryServer:
-    image: train/discovery-server:latest
-    container_name: discovery-server
+    image: train/discoveryServer:latest
+    container_name: discoveryServer
     ports:
       - "8761:8761"
     networks:
-      - train-network
+      - ${NETWORK_NAME:-train-network}
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-dev}
 
   gatewayService:
-    image: train/gateway-service:latest
-    container_name: gateway-service
+    image: train/gatewayService:latest
+    container_name: gatewayService
     ports:
       - "8080:8080"
     depends_on:
-      - discovery-server
+      - discoveryServer
     networks:
-      - train-network
+      - ${NETWORK_NAME:-train-network}
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - <<: *default-eureka-env
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-dev}
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:-http://discoveryServer:8761/eureka}
 
   userService:
-    image: train/user-service:latest
-    container_name: user-service
+    image: train/userService:latest
+    container_name: userService
     depends_on:
-      - mysql-user
-      - discovery-server
+      - discoveryServer
+      # - mysql-user
     networks:
-      - train-network
+      - ${NETWORK_NAME:-train-network}
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-user:3306/userdb
-      - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=password
-      - <<: *default-eureka-env
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:-http://discoveryServer:8761/eureka}
+      - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL}
+      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME:-root}
+      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD:-password}
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-dev}
 
   trainService:
-    image: train/train-service:latest
-    container_name: train-service
+    image: train/trainService:latest
+    container_name: trainService
     depends_on:
-      - mysql-train
-      - discovery-server
+      - discoveryServer
+      # - mysql-train
     networks:
-      - train-network
+      - ${NETWORK_NAME:-train-network}
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-train:3306/traindb
-      - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=password
-      - <<: *default-eureka-env
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:-http://discoveryServer:8761/eureka}
+      - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL}
+      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME:-root}
+      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD:-password}
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-dev}
 
   bookingService:
-    image: train/booking-service:latest
-    container_name: booking-service
+    image: train/bookingService:latest
+    container_name: bookingService
     depends_on:
-      - mysql-booking
-      - discovery-server
+      - discoveryServer
+      # - mysql-booking
     networks:
-      - train-network
+      - ${NETWORK_NAME:-train-network}
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-booking:3306/bookingdb
-      - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=password
-      - <<: *default-eureka-env
-  payment-service:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:-http://discoveryServer:8761/eureka}
+      - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL}
+      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME:-root}
+      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD:-password}
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-dev}
+
+  paymentService:
     image: train/payment-service:latest
     container_name: payment-service
     depends_on:
-      - mysql-payment
-      - discovery-server
+      - discoveryServer
+      # - mysql-payment
     networks:
-      - train-network
+      - ${NETWORK_NAME:-train-network}
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-payment:3306/paymentdb
-      - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=password
-      - <<: *default-eureka-env
-  frontend:
-    build: ./frontend
-    ports:
-      - "3000:3000"
-    networks:
-      - train-network
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:-http://discoveryServer:8761/eureka}
+      - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL}
+      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME:-root}
+      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD:-password}
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-dev}
+  # TODO: Uncomment and configure the frontend and MySQL services as needed
+  # frontend:
+  #   build: ./frontend
+  #   ports:
+  #     - "3000:3000"
+  #   networks:
+  #     - ${NETWORK_NAME:-train-network}
 
-  mysql-user:
-    image: mysql:8.0
-    container_name: mysql-user
-    environment:
-      - MYSQL_ROOT_PASSWORD=password
-      - MYSQL_DATABASE=userdb
-    ports:
-      - "3307:3306"
-    networks:
-      - train-network
+  # mysql-user:
+  #   image: mysql:8.0
+  #   container_name: mysql-user
+  #   environment:
+  #     - MYSQL_ROOT_PASSWORD=${SPRING_DATASOURCE_PASSWORD:-password}
+  #     - MYSQL_DATABASE=userdb
+  #   ports:
+  #     - "3307:3306"
+  #   networks:
+  #     - ${NETWORK_NAME:-train-network}
 
-  mysql-train:
-    image: mysql:8.0
-    container_name: mysql-train
-    environment:
-      - MYSQL_ROOT_PASSWORD=password
-      - MYSQL_DATABASE=traindb
-    ports:
-      - "3308:3306"
-    networks:
-      - train-network
+  # mysql-train:
+  #   image: mysql:8.0
+  #   container_name: mysql-train
+  #   environment:
+  #     - MYSQL_ROOT_PASSWORD=${SPRING_DATASOURCE_PASSWORD:-password}
+  #     - MYSQL_DATABASE=traindb
+  #   ports:
+  #     - "3308:3306"
+  #   networks:
+  #     - ${NETWORK_NAME:-train-network}
 
-  mysql-booking:
-    image: mysql:8.0
-    container_name: mysql-booking
-    environment:
-      - MYSQL_ROOT_PASSWORD=password
-      - MYSQL_DATABASE=bookingdb
-    ports:
-      - "3309:3306"
-    networks:
-      - train-network
+  # mysql-booking:
+  #   image: mysql:8.0
+  #   container_name: mysql-booking
+  #   environment:
+  #     - MYSQL_ROOT_PASSWORD=${SPRING_DATASOURCE_PASSWORD:-password}
+  #     - MYSQL_DATABASE=bookingdb
+  #   ports:
+  #     - "3309:3306"
+  #   networks:
+  #     - ${NETWORK_NAME:-train-network}
+  
+  # mysql-payment:
+  #   image: mysql:8.0
+  #   container_name: mysql-payment
+  #   environment:
+  #     - MYSQL_ROOT_PASSWORD=${SPRING_DATASOURCE_PASSWORD:-password}
+  #     - MYSQL_DATABASE=bookingdb
+  #   ports:
+  #     - "3310:3306"
+  #   networks:
+  #     - ${NETWORK_NAME:-train-network}
   
 
 networks:
