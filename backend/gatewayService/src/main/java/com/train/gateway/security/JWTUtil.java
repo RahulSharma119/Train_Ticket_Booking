@@ -1,4 +1,4 @@
-package com.train.user.security;
+package com.train.gateway.security;
 
 import java.security.Key;
 import java.util.Date;
@@ -61,9 +61,9 @@ public class JWTUtil {
                 .compact();
     }
 
-    public boolean isTokenValid(String token, UserDetails userDetails) {
-        final String username = extractUsername(token);
-        return (username.equals(userDetails.getUsername())) && !isTokenExpired(token);
+    public boolean isTokenValid(String token, String username) {
+        final String username2 = extractUsername(token);
+        return (username2.equals(username)) && !isTokenExpired(token);
     }
 
     private boolean isTokenExpired(String token) {
@@ -87,3 +87,4 @@ public class JWTUtil {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 }
+

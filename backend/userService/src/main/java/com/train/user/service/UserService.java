@@ -8,6 +8,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.train.user.dto.RegisterRequest;
+import com.train.user.enums.UserRole;
 import com.train.user.model.User;
 import com.train.user.repository.UserRepository;
 
@@ -18,9 +19,9 @@ public class UserService {
 	private PasswordEncoder passwordEncoder;
 	
 	@Autowired
-	UserService(UserRepository userRepository){
+	UserService(UserRepository userRepository, PasswordEncoder passwordEncoder){
 		this.userRepository = userRepository;
-		
+		this.passwordEncoder = passwordEncoder;
 	}
 	
 	public List<User> getAllUsers() {
@@ -34,15 +35,16 @@ public class UserService {
     public User register(RegisterRequest request) {
     	User user = new User();
     	user.setEmail(request.getEmail());
-        user.setPassword(request.getPassword());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setName(request.getName());
         user.setPhone(request.getPhone());
+        user.setRole(UserRole.USER);
         return userRepository.save(user);
     }
     
     public User authenticateUser(String email, String password) {
     	User user = userRepository.findByEmail(email).orElseThrow(()-> new RuntimeException("User Not found"));
-    	if(!passwordEncoder.matches(user.getPassword, password) ) {
+    	if(!passwordEncoder.matches(password, user.getPassword()) ) {
     		throw new RuntimeException("Invalid Credentials");
     	}
     	return user;
