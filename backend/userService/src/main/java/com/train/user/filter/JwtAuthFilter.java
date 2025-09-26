@@ -6,11 +6,14 @@ import java.util.List;
 
 import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+
+import com.train.user.security.JWTUtil;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -18,27 +21,41 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 @Component
-public class HeaderAuthenticationFilter extends OncePerRequestFilter {
+public class JwtAuthFilter extends OncePerRequestFilter {
 	
-	private static final String HEADER_EMAIL = "X-User-Email";
-    private static final String HEADER_ROLES = "X-User-Role";
-
+	JWTUtil jwtUtil;
+	
+	public JwtAuthFilter(JWTUtil util) {
+		jwtUtil = util;
+	}
+	
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 			throws ServletException, IOException {
 		
-		String email = request.getHeader(HEADER_EMAIL);
-		String role = request.getHeader(HEADER_ROLES);
+		String authHeader = request.getHeader("Authorization");
 		
-		if(email != null && role != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-			List<SimpleGrantedAuthority> roles = Arrays.stream(role.split(","))
-					.map(String::trim)
-					.filter(r -> !r.isEmpty() && r.length() > 0)
-					.map(r -> new SimpleGrantedAuthority(r))
-					.toList();
-			UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(email, null, roles);
-			auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-			SecurityContextHolder.getContext().setAuthentication(auth);
+		if (authHeader != null && authHeader.startsWith("Bearer ")) {
+			try {
+                String token = authHeader.substring(7);
+
+                final String userEmail = jwtUtil.extractUsername(token);
+
+                String role = (String)jwtUtil.extractClaim(token, c -> c.get("role"));
+                
+                if(jwtUtil.isTokenValid(token, userEmail)) {
+                	List<SimpleGrantedAuthority> authority = Arrays.stream(role.split(","))
+        					.map(String::trim)
+        					.filter(r -> !r.isEmpty() && r.length() > 0)
+        					.map(r -> new SimpleGrantedAuthority(r))
+        					.toList();
+                	Authentication auth = new UsernamePasswordAuthenticationToken(userEmail, null, authority);
+                	SecurityContextHolder.getContext().setAuthentication(auth);
+                }
+            } catch (Exception e) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                return;
+            }
 		}
 		
 		filterChain.doFilter(request, response);

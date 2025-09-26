@@ -48,7 +48,7 @@ public class UserController {
     }
 
     @GetMapping("/login")
-    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) throws Exception {
     	User user = userService.authenticateUser(request.getEmail(),request.getPassword());
     	Map<String,Object> mp = new HashMap<>();
     	mp.put("role", user.getRole().toString());

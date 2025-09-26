@@ -1,10 +1,10 @@
-package com.train.train;
+package com.train.trains;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class TrainApplicationTests {
+class TrainServiceApplicationTests {
 
 	@Test
 	void contextLoads() {

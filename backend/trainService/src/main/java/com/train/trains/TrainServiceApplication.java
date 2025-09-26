@@ -1,13 +1,13 @@
-package com.train.train;
+package com.train.trains;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class TrainApplication {
+public class TrainServiceApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(TrainApplication.class, args);
+		SpringApplication.run(TrainServiceApplication.class, args);
 	}
 
 }

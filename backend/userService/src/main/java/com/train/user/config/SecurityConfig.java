@@ -13,15 +13,15 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import com.train.user.filter.HeaderAuthenticationFilter;
+import com.train.user.filter.JwtAuthFilter;
 
 @Configuration
 @EnableMethodSecurity
 public class SecurityConfig {
 	
-	private final HeaderAuthenticationFilter jwtFilter;
+	private final JwtAuthFilter jwtFilter;
 
-    public SecurityConfig(HeaderAuthenticationFilter jwtFilter) {
+    public SecurityConfig(JwtAuthFilter jwtFilter) {
         this.jwtFilter = jwtFilter;
     }
 	

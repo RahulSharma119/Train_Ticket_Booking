@@ -26,11 +26,6 @@ import reactor.core.publisher.Mono;
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class JwtAuthenticationFilter implements WebFilter {
 	
-
-	private static final String HEADER_EMAIL = "X-User-Email";
-    private static final String HEADER_ROLES = "X-User-Role";
-	
-	
 	private JWTUtil jwtService;
 	
 	public JwtAuthenticationFilter(JWTUtil jwtService) {
@@ -67,13 +62,9 @@ public class JwtAuthenticationFilter implements WebFilter {
 					.map(r -> new SimpleGrantedAuthority(r))
 					.toList();
         	Authentication auth = new UsernamePasswordAuthenticationToken(userEmail, null, authority);
-            
-            exchange = exchange.mutate().request(exchange.getRequest().mutate()
-                    .header(HEADER_EMAIL, userEmail)
-                    .header(HEADER_ROLES, role != null ? role : "")
-                    .build()).build();
+         
             return chain.filter(exchange).contextWrite(ReactiveSecurityContextHolder.withAuthentication(auth));
-        } catch (JwtException e) {
+        } catch (Exception e) {
             exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
             return exchange.getResponse().setComplete();
         }
