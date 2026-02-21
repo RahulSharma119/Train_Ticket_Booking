@@ -14,27 +14,28 @@ import com.train.gateway.filter.JwtAuthenticationFilter;
 @Configuration
 @EnableWebFluxSecurity
 public class SecurityConfig {
-	
-	private JwtAuthenticationFilter jwtFilter;
-	
-	public SecurityConfig(JwtAuthenticationFilter jwtFilter) {
-		this.jwtFilter = jwtFilter;
-	}
 
-	@Bean
+    private JwtAuthenticationFilter jwtFilter;
+
+    public SecurityConfig(JwtAuthenticationFilter jwtFilter) {
+        this.jwtFilter = jwtFilter;
+    }
+
+    @Bean
     public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
         http.csrf(csrf -> csrf.disable())
-            .authorizeExchange(exchanges -> exchanges
-                .pathMatchers("/api/users/login/**", "/api/users/register/**").permitAll()
-                .pathMatchers("/actuator/health", "/actuator/info").permitAll()
-                .anyExchange().authenticated()
-                .and()
-                .addFilterBefore((WebFilter)jwtFilter,  SecurityWebFiltersOrder.FIRST)
-            )
-            .httpBasic(basic -> basic.disable())
-            .formLogin(form -> form.disable());
+                .authorizeExchange(exchanges -> exchanges
+                        .anyExchange().permitAll()
+                        // TODO: Remove this after testing
+                        // .pathMatchers("/api/users/login/**", "/api/users/register/**").permitAll()
+                        // .pathMatchers("/actuator/health", "/actuator/info").permitAll()
+                        // .anyExchange().authenticated()
+                        .and()
+                        .addFilterBefore((WebFilter) jwtFilter, SecurityWebFiltersOrder.FIRST))
+                .httpBasic(basic -> basic.disable())
+                .formLogin(form -> form.disable());
 
         return http.build();
-	}
-	
+    }
+
 }
