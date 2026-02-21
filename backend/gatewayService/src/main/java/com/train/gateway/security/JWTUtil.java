@@ -1,4 +1,4 @@
-package com.train.user.security;
+package com.train.gateway.security;
 
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
@@ -7,7 +7,6 @@ import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
-import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -24,9 +23,6 @@ import org.springframework.stereotype.Component;
 @Component
 public class JWTUtil {
 	
-	@Value("${security.jwt.secret-key}")
-    private String secretKey;
-	
 	@Value("${security.jwt.public-key}")
     private String publicKey;
 
@@ -42,27 +38,8 @@ public class JWTUtil {
         return claimsResolver.apply(claims);
     }
 
-    public String generateToken(UserDetails userDetails) throws Exception {
-        return generateToken(new HashMap<>(), userDetails);
-    }
-
-    public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) throws Exception {
-        return buildToken(extraClaims, userDetails, jwtExpiration);
-    }
-
     public long getExpirationTime() {
         return jwtExpiration;
-    }
-
-    private String buildToken(Map<String, Object> extraClaims, UserDetails userDetails, long expiration) throws Exception {
-        return Jwts
-                .builder()
-                .setClaims(extraClaims)
-                .setSubject(userDetails.getUsername())
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + expiration))
-                .signWith(getSignInPrivateKey(), SignatureAlgorithm.RS256)
-                .compact();
     }
 
     public boolean isTokenValid(String token, UserDetails userDetails) throws Exception {
@@ -92,20 +69,8 @@ public class JWTUtil {
     }
 
     private PublicKey getSignInPublicKey() throws InvalidKeySpecException, NoSuchAlgorithmException {
-    	String key = publicKey.replace("-----BEGIN PUBLIC KEY-----", "")
-                .replace("-----END PUBLIC KEY-----", "")
-                .replaceAll("\\s+", "");
-        byte[] keyBytes = Base64.getDecoder().decode(key);
+        byte[] keyBytes = Decoders.BASE64.decode(publicKey);
         X509EncodedKeySpec keySpec = new X509EncodedKeySpec(keyBytes);
         return KeyFactory.getInstance("RSA").generatePublic(keySpec);
-    }
-    
-    private PrivateKey getSignInPrivateKey() throws InvalidKeySpecException, NoSuchAlgorithmException {
-    	String key = secretKey.replace("-----BEGIN PRIVATE KEY-----", "")
-                .replace("-----END PRIVATE KEY-----", "")
-                .replaceAll("\\s+", "");
-        byte[] keyBytes = Base64.getDecoder().decode(key);
-        PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(keyBytes);
-        return KeyFactory.getInstance("RSA").generatePrivate(keySpec);
     }
 }

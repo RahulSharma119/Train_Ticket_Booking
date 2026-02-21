@@ -1,6 +1,8 @@
 package com.train.user.controller;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,30 +28,31 @@ import com.train.user.service.UserService;
 public class UserController {
 	
     private UserService userService;
-    private PasswordEncoder passwordEncoder;
     private JWTUtil jwtUtil;
     
     @Autowired
-    public UserController(UserService userService) {
+    public UserController(UserService userService, JWTUtil jwtUtil) {
 		this.userService = userService;
+		this.jwtUtil = jwtUtil;
 	}
     
     
-    @GetMapping
+    @GetMapping("/")
     public List<User> getAllUsers() {
         return userService.getAllUsers();
     }
 
     @PostMapping("/register")
     public User register(@RequestBody RegisterRequest request) {
-    	request.setPassword(passwordEncoder.encode(request.getPassword()));
         return userService.register(request);
     }
 
     @GetMapping("/login")
-    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) throws Exception {
     	User user = userService.authenticateUser(request.getEmail(),request.getPassword());
-    	String token = jwtUtil.generateToken(user.getEmail());
+    	Map<String,Object> mp = new HashMap<>();
+    	mp.put("role", user.getRole().toString());
+    	String token = jwtUtil.generateToken(mp, user);
     	if(token != null && token.length()>0) {
     		return new ResponseEntity<LoginResponse>(new LoginResponse(token, user.getName()), HttpStatus.OK);
     	}
